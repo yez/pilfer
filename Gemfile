@@ -11,3 +11,7 @@ gem 'pg'
 gem 'rubyzip'
 gem 'uuid'
 gem 'debugger'
+
+group :test do
+  gem 'rspec-rails'
+end

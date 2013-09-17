@@ -136,5 +136,4 @@ class Pilferer
   def files_to_delete
     @files_to_delete ||= []
   end
-
 end
