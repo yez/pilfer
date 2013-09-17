@@ -59,7 +59,7 @@ class Pilferer
     [].tap do |arr|
       images.each do |image|
         image.attributes.each do |name, attribute|
-          if name == "src"
+          if name == 'src'
             parsed_src = URI.parse(attribute.value)
             arr << begin
               if parsed_src.scheme.nil? && parsed_src.host.nil?

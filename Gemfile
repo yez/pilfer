@@ -14,4 +14,6 @@ gem 'debugger'
 
 group :test do
   gem 'rspec-rails'
+  gem 'debugger'
+  gem 'rr'
 end
