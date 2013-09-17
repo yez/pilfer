@@ -1,0 +1,13 @@
+
+development:
+  adapter: postgresql
+  database: image_pilfer_dev
+
+test:
+  adapter: postgresql
+  database: image_pilfer_test
+
+production:
+  adapter: postgresql
+  database: image_pilfer
+
