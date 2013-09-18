@@ -13,21 +13,19 @@ class Pilferer
   def scrape_all(threaded = true)
     images = get_images.flatten.uniq
 
-    time_spent = Benchmark.measure do
-      if threaded
-        images_queue = Queue.new
-        images.each { |img| images_queue << img }
-        download_images(images_queue)
-      else
-        images.each { |image| download_image(image)}
-      end
+    if threaded
+      images_queue = Queue.new
+      images.each { |img| images_queue << img }
+      download_images(images_queue)
+    else
+      images.each { |image| download_image(image)}
     end
 
     zip_files
 
     delete_files
 
-    time_spent
+    archive_file_name
   end
 
   def get_images
@@ -123,14 +121,17 @@ class Pilferer
   end
 
   def zip_files
-    zipfile_name = "/tmp/archive.zip"
-    Zip::File.open(zipfile_name, Zip::File::CREATE) do |zipfile|
+    Zip::File.open(archive_file_name, Zip::File::CREATE) do |zipfile|
       while ( local_files.length > 0 && full_filename = local_files.pop ) do
         short_name = full_filename.split('/').last
         zipfile.add(short_name, full_filename)
         files_to_delete << full_filename
       end
     end
+  end
+
+  def archive_file_name
+    "/tmp/archive.zip"
   end
 
   def files_to_delete

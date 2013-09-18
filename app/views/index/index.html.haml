@@ -1,6 +1,6 @@
 .search
-  %label
-    Enter URL
-    %input
-  %button
-    Pilfer
+  = form_tag '/pilfer', remote: true, class: 'pilfer-form' do
+    %label
+      Enter URL
+      = text_field_tag :url_to_pilfer
+    = submit_tag 'Pilfer'
