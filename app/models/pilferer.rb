@@ -46,9 +46,12 @@ class Pilferer
   def iframe_images(nokogiri_result)
     [].tap do |arr|
       nokogiri_result.css('iframe').each do |iframe|
-        url = iframe.attributes.select { |name, value| name == 'src' }["src"].value
-        iframe_pilferer = Pilferer.new(url)
-        arr << iframe_pilferer.get_images
+        sources = iframe.attributes.select { |name, value| name == 'src' }
+        unless sources.empty?
+          url = sources["src"].value
+          iframe_pilferer = Pilferer.new(url)
+          arr << iframe_pilferer.get_images
+        end
       end
     end
   end
@@ -121,7 +124,7 @@ class Pilferer
   end
 
   def zip_files
-    Zip::File.open(archive_file_name, Zip::File::CREATE) do |zipfile|
+    Zip::File.open("#{archive_file_path}/#{archive_file_name}", Zip::File::CREATE) do |zipfile|
       while ( local_files.length > 0 && full_filename = local_files.pop ) do
         short_name = full_filename.split('/').last
         zipfile.add(short_name, full_filename)
@@ -131,7 +134,11 @@ class Pilferer
   end
 
   def archive_file_name
-    "/tmp/archive.zip"
+    @archive_file_name ||= "#{UUID.generate(:compact)[0..8]}images.zip"
+  end
+
+  def archive_file_path
+    "#{Rails.root.join('public')}"
   end
 
   def files_to_delete

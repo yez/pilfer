@@ -1,4 +1,7 @@
 class IndexController < ApplicationController
+
+  include ActionView::Helpers::UrlHelper
+
   def index
   end
 
@@ -7,6 +10,6 @@ class IndexController < ApplicationController
     file_name = pilfer.scrape_all
     success = file_name.present?
 
-    render json: { success: success, file: file_name}
+    render json: { success: success, file: link_to("File Download", file_name) }
   end
 end
