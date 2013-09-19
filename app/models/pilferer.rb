@@ -2,10 +2,16 @@ require 'zip'
 class Pilferer
   include HTTParty
 
+  attr_accessor :base_url, :full_url
+
   THREAD_POOL = 10
 
   def initialize(url)
-    @base_url, @full_url = parse_url(url)
+    nice_url = NiceUrl.new(url)
+    if nice_url.valid?
+      self.base_url = nice_url.base_url
+      self.full_url = nice_url.full_url
+    end
   end
 
   def scrape_all(threaded = true)
@@ -26,42 +32,15 @@ class Pilferer
     archive_file_name
   end
 
+  def get_images
+    images_from_result(get_page(self.full_url))
+  end
+
   def valid_url?
-    (@base_url =~ URI::regexp).present? && test_connection
+    self.base_url.present? && self.full_url.present?
   end
 
 private
-
-  def test_connection
-    begin
-      response = self.class.get(@base_url)
-    rescue SocketError => e
-      return false
-    end
-    [200, 300, 301, 302].include? response.code
-  end
-
-  def parse_url(url)
-    parsed = URI.parse(url)
-    base_url = ""
-    full_url = ""
-    if parsed.scheme.present?
-      full_url = "#{parsed.scheme}://#{parsed}"
-    else
-      if parsed.host.present?
-        base_url = "http://#{parsed.host}"
-      else
-        base_url = "http://#{parsed}"
-      end
-      full_url = "http://#{parsed}"
-    end
-
-    [base_url, full_url]
-  end
-
-  def get_images
-    images_from_result(get_page(@full_url))
-  end
 
   def get_page(url)
     Nokogiri::HTML::Document.parse(self.class.get(url))
@@ -81,7 +60,7 @@ private
         unless sources.empty?
           url = sources["src"].value
           iframe_pilferer = Pilferer.new(url)
-          arr << iframe_pilferer.get_images
+          arr << iframe_pilferer.get_images if iframe_pilferer.valid_url?
         end
       end
     end
@@ -96,9 +75,9 @@ private
             arr << begin
               if parsed_src.scheme.nil? && parsed_src.host.nil?
                 if attribute.value[0] == "/"
-                  "#{@base_url}#{attribute.value}"
+                  "#{self.base_url}#{attribute.value}"
                 else
-                  "#{@base_url}/#{attribute.value}"
+                  "#{self.base_url}/#{attribute.value}"
                 end
               else
                 parsed_src.to_s
@@ -128,14 +107,15 @@ private
   end
 
   def image_name(url)
-    url.split('/').last.split('.').first.gsub(/\?.*/, '')
+    url.split('/').last
   end
 
   def download_image(image_url)
-    name = image_name(image_url)
-    end_of_url_array = name.split('.')
-    image_extension = (end_of_url_array.count == 1) ? "jpg" : end_of_url_array.last.gsub(/\?.*/, '')
-    new_image_name = "#{name[0..30]}.#{image_extension}"
+    name_with_extension = image_name(image_url)
+    name_without_extension = name_with_extension.split('.').first
+    end_of_url_array = name_with_extension.split('.')
+    image_extension = (end_of_url_array.count < 1) ? "jpg" : end_of_url_array.last.gsub(/\?.*/, '')
+    new_image_name = "#{name_without_extension[0..30]}.#{image_extension}"
     file_name = "/tmp/#{UUID.generate(:compact)[0..5]}_#{new_image_name}"
     local_files << file_name
     File.open(file_name, 'wb') do |f|
