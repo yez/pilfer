@@ -26,7 +26,20 @@ class Pilferer
     archive_file_name
   end
 
+  def valid_url?
+    (@base_url =~ URI::regexp).present? && test_connection
+  end
+
 private
+
+  def test_connection
+    begin
+      response = self.class.get(@base_url)
+    rescue SocketError => e
+      return false
+    end
+    [200, 300, 301, 302].include? response.code
+  end
 
   def parse_url(url)
     parsed = URI.parse(url)

@@ -5,10 +5,17 @@ Pilfer = function(){
 };
 
 Pilfer.prototype.fileToDownload = function(jsonResponse){
-  this.download_el.html(jsonResponse.file);
+  if(jsonResponse.success == true){
+    this.download_el.html(jsonResponse.file);
+  }
+  else{
+    this.download_el.html(jsonResponse.error);
+  }
+
 }
 
 Pilfer.prototype.showSpinner = function(jsonResponse){
+  this.download_el.html('');
   this.download_button.hide();
   this.spinner.show();
 }
