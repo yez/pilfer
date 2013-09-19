@@ -5,9 +5,7 @@ class Pilferer
   THREAD_POOL = 10
 
   def initialize(url)
-    parsed = URI.parse(url)
-    @base_url = "#{parsed.scheme + "://" if parsed.scheme}#{parsed.host}"
-    @full_url = parsed.to_s
+    @base_url, @full_url = parse_url(url)
   end
 
   def scrape_all(threaded = true)
@@ -26,6 +24,26 @@ class Pilferer
     delete_files
 
     archive_file_name
+  end
+
+private
+
+  def parse_url(url)
+    parsed = URI.parse(url)
+    base_url = ""
+    full_url = ""
+    if parsed.scheme.present?
+      full_url = "#{parsed.scheme}://#{parsed}"
+    else
+      if parsed.host.present?
+        base_url = "http://#{parsed.host}"
+      else
+        base_url = "http://#{parsed}"
+      end
+      full_url = "http://#{parsed}"
+    end
+
+    [base_url, full_url]
   end
 
   def get_images
