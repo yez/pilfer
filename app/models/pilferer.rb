@@ -1,5 +1,6 @@
 require 'zip'
 class Pilferer
+
   include HTTParty
 
   attr_accessor :base_url, :full_url
@@ -48,45 +49,29 @@ private
 
   def images_from_result(nokogiri_result)
     [].tap do |images|
-      images << sources(nokogiri_result.css('img'))
-      images << iframe_images(nokogiri_result)
+      nokogiri_result.css('img').each do |noko_data|
+        image = Image.new(noko_data, base_url)
+        images << image if image.source.present?
+      end
+
+      iframe_images(nokogiri_result).each do |iframe_image|
+        images << iframe_image
+      end
     end
   end
 
   def iframe_images(nokogiri_result)
-    [].tap do |arr|
-      nokogiri_result.css('iframe').each do |iframe|
-        sources = iframe.attributes.select { |name, value| name == 'src' }
-        unless sources.empty?
-          url = sources["src"].value
-          iframe_pilferer = Pilferer.new(url)
-          arr << iframe_pilferer.get_images if iframe_pilferer.valid_url?
+    iframe_found_images = []
+    nokogiri_result.css('iframe').each do |iframe|
+      sources = iframe.attributes.select { |name, value| name == 'src' }
+      unless sources.empty?
+        iframe_pilferer = Pilferer.new(sources["src"].value)
+        if iframe_pilferer.valid_url?
+          iframe_found_images << iframe_pilferer.get_images
         end
       end
     end
-  end
-
-  def sources(images)
-    [].tap do |arr|
-      images.each do |image|
-        image.attributes.each do |name, attribute|
-          if name == 'src'
-            parsed_src = URI.parse(attribute.value)
-            arr << begin
-              if parsed_src.scheme.nil? && parsed_src.host.nil?
-                if attribute.value[0] == "/"
-                  "#{self.base_url}#{attribute.value}"
-                else
-                  "#{self.base_url}/#{attribute.value}"
-                end
-              else
-                parsed_src.to_s
-              end
-            end
-          end
-        end
-      end
-    end
+    iframe_found_images.flatten
   end
 
   def local_files
@@ -97,8 +82,8 @@ private
     threads = []
     THREAD_POOL.times do
       threads << Thread.new do
-        while ( images.length > 0 && url = images.pop ) do
-          download_image(url)
+        while ( images.length > 0 && image = images.pop ) do
+          download_image(image)
         end
       end
     end
@@ -106,21 +91,11 @@ private
     threads.map(&:join)
   end
 
-  def image_name(url)
-    url.split('/').last
-  end
-
-  def download_image(image_url)
-    name_with_extension = image_name(image_url)
-    name_without_extension = name_with_extension.split('.').first
-    end_of_url_array = name_with_extension.split('.')
-    image_extension = (end_of_url_array.count < 1) ? "jpg" : end_of_url_array.last.gsub(/\?.*/, '')
-    new_image_name = "#{name_without_extension[0..30]}.#{image_extension}"
-    file_name = "/tmp/#{UUID.generate(:compact)[0..5]}_#{new_image_name}"
-    local_files << file_name
-    File.open(file_name, 'wb') do |f|
+  def download_image(image)
+    local_files << image.local_file_name
+    File.open(image.local_file_name, 'wb') do |f|
       begin
-        image_data = self.class.get(image_url)
+        image_data = image.download
         f.puts(image_data)
       rescue Exception => e
         Rails.logger.info("whoops: #{e}")
