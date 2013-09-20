@@ -16,19 +16,31 @@ class Pilferer
   end
 
   def scrape_all(threaded = true)
-    images = get_images.flatten.uniq
+    images = get_images
 
-    if threaded
-      images_queue = Queue.new
-      images.each { |img| images_queue << img }
-      download_images(images_queue)
-    else
-      images.each { |image| download_image(image)}
+    time_taken = Benchmark.measure do
+      if threaded
+        images_queue = Queue.new
+        images.each { |img| images_queue << img }
+        download_images(images_queue)
+      else
+        images.each { |image| download_image(image)}
+      end
     end
 
-    zip_files
+    puts "downloading: #{time_taken}"
 
-    delete_files
+    time_taken = Benchmark.measure do
+      zip_files
+    end
+
+    puts "zipping: #{time_taken}"
+
+    time_taken = Benchmark.measure do
+      delete_files
+    end
+
+    puts "deleting: #{time_taken}"
 
     archive_file_name
   end
@@ -61,17 +73,35 @@ private
   end
 
   def iframe_images(nokogiri_result)
-    iframe_found_images = []
+    iframe_found_images = Queue.new
+    threads = []
     nokogiri_result.css('iframe').each do |iframe|
       sources = iframe.attributes.select { |name, value| name == 'src' }
-      unless sources.empty?
-        iframe_pilferer = Pilferer.new(sources["src"].value)
-        if iframe_pilferer.valid_url?
-          iframe_found_images << iframe_pilferer.get_images
+      sources_queue = Queue.new
+      sources.each do |source|
+        sources_queue << source
+      end
+
+      THREAD_POOL.times do
+        threads << Thread.new do
+          while ( sources_queue.length > 0 && source = sources_queue.pop ) do
+            iframe_pilferer = Pilferer.new(source.last.value)
+            if iframe_pilferer.valid_url?
+              iframe_found_images << iframe_pilferer.get_images
+            end
+          end
         end
       end
     end
-    iframe_found_images.flatten
+
+    threads.map(&:join)
+
+    return_images = []
+    while(iframe_found_images.length > 0 && image_set = iframe_found_images.pop) do
+      return_images << image_set
+    end
+
+    return_images.flatten
   end
 
   def local_files
