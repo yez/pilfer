@@ -56,7 +56,13 @@ class Pilferer
 private
 
   def get_page(url)
-    Nokogiri::HTML::Document.parse(self.class.get(url))
+    page = nil
+    begin
+      page = self.class.get(url)
+    rescue Exception => e
+      Rails.logger.debug("whoops #{e}")
+    end
+    Nokogiri::HTML::Document.parse(page)
   end
 
   def images_from_result(nokogiri_result)

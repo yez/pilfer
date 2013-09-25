@@ -1,18 +1,29 @@
 
 .row
-  .col-md-9.col-md-offset-3
-    %h1.title
+  %h1.title.col-md-4.col-md-offset-4
+    %center
       Image Pilfer
+  .col-md-4
+    = render 'shared/add_this'
 .row
-  .col-md-9.col-md-offset-3
+  .col-md-5.col-md-offset-3
     .search
       = form_tag '/pilfer', remote: true, class: 'pilfer-form' do
         .row
-          %label
-            = text_field_tag :url_to_pilfer, nil, class: 'form-control', placeholder: 'Enter URL'
+          .input-group.col-md-12.col-sm-10.col-sm-offset-1
+            = text_field_tag :url_to_pilfer, nil, class: 'form-control', placeholder: "Enter URL"
+            %span.input-group-btn
+              = submit_tag "Pilfer", class: 'form-control btn btn-default'
         .row
-          = submit_tag 'Pilfer', class: 'btn btn-default'
-          .spinner.hidden
-            = image_tag 'spinner.gif'
+          .invalid-url.col-md-12.col-sm-10.col-sm-offset-1
+            Please enter a valid URL
+.row
+  .spinner.col-md-4.col-md-offset-4
+    %center
+      = image_tag 'spinner.gif'
 
-    .download
+.row.download-links
+  .download.col-md-5.col-md-offset-3
+
+= render 'shared/how_it_works'
+

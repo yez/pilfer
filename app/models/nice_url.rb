@@ -7,7 +7,7 @@ class NiceUrl
   def initialize(url)
     self.base_url = ""
     self.full_url = ""
-    parse(url)
+    parse(url) unless url.blank?
   end
 
   def valid?

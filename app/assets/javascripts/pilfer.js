@@ -1,26 +1,26 @@
 Pilfer = function(){
   this.download_el = $('.download');
-  this.download_button = $('.pilfer-form input[type=submit]');
+  this.form = $('.pilfer-form');
   this.spinner = $('.spinner');
+  this.error_text = $('.invalid-url');
 };
 
 Pilfer.prototype.fileToDownload = function(jsonResponse){
   if(jsonResponse.success == true){
-    this.download_el.html(jsonResponse.file);
+    this.download_el.prepend(jsonResponse.file);
   }
   else{
-    this.download_el.html(jsonResponse.error);
+    this.error_text.show();
   }
-
 }
 
 Pilfer.prototype.showSpinner = function(jsonResponse){
-  this.download_el.html('');
-  this.download_button.hide();
+  this.form.hide();
+  this.error_text.hide();
   this.spinner.show();
 }
 
 Pilfer.prototype.hideSpinner = function(jsonResponse){
   this.spinner.hide();
-  this.download_button.show();
+  this.form.show();
 }

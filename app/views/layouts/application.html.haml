@@ -5,9 +5,10 @@
     ImagePilfer
   = stylesheet_link_tag    "application", media: "all"
   = javascript_include_tag "application"
+  = javascript_include_tag "//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-52007e067f9d6f6b"
   = csrf_meta_tags
 
   %body
     .row
-      .col-md-11.col-md-offset-1
+      .col-md-12
         = yield

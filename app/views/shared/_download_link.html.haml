@@ -1,6 +1,7 @@
 .row.download-container
-  .col-md-12
+  .col-md-10.col-md-offset-1
     = link_to(file_name) do
       %span.glyphicon.glyphicon-briefcase
       %span.download-link
-        Download Images
+        Download Images from
+        = site_url
