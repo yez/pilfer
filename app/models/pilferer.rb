@@ -5,7 +5,8 @@ class Pilferer
 
   attr_accessor :base_url, :full_url
 
-  THREAD_POOL = 10
+  THREAD_POOL       = 10
+  MINIMUM_FILE_SIZE = 1000
 
   def initialize(url)
     nice_url = NiceUrl.new(url)
@@ -149,7 +150,7 @@ private
     Zip::File.open("#{archive_file_path}/#{archive_file_name}", Zip::File::CREATE) do |zipfile|
       while ( local_files.length > 0 && full_filename = local_files.pop ) do
         short_name = full_filename.split('/').last
-        zipfile.add(short_name, full_filename)
+        zipfile.add(short_name, full_filename) unless File.size(full_filename).to_i < MINIMUM_FILE_SIZE
         files_to_delete << full_filename
       end
     end

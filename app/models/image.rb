@@ -27,18 +27,24 @@ class Image
   end
 
   def extract_source
-    raw_nokogiri_data.attributes.each do |name, attribute|
-      if name == 'src'
-        parsed_src = URI.parse(attribute.value)
-        self.source = begin
-          if parsed_src.scheme.nil? && parsed_src.host.nil?
-            if attribute.value[0] == "/"
-              "#{self.base_url}#{attribute.value}"
+    data_defer_src = raw_nokogiri_data.attributes["data-defer-src"]
+
+    if data_defer_src.present?
+      self.source = data_defer_src.value
+    else
+      raw_nokogiri_data.attributes.each do |name, attribute|
+        if name == 'src'
+          parsed_src = URI.parse(attribute.value)
+          self.source = begin
+            if parsed_src.scheme.nil? && parsed_src.host.nil?
+              if attribute.value[0] == "/"
+                "#{self.base_url}#{attribute.value}"
+              else
+                "#{self.base_url}/#{attribute.value}"
+              end
             else
-              "#{self.base_url}/#{attribute.value}"
+              parsed_src.to_s
             end
-          else
-            parsed_src.to_s
           end
         end
       end
