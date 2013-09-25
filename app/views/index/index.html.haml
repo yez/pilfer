@@ -1,12 +1,18 @@
-.search
-  .title
-    Image Pilfer
-  = form_tag '/pilfer', remote: true, class: 'pilfer-form' do
-    %label
-      Enter URL
-      = text_field_tag :url_to_pilfer
-    = submit_tag 'Pilfer'
-    .spinner.hidden
-      = image_tag 'spinner.gif'
 
-.download
+.row
+  .col-md-9.col-md-offset-3
+    %h1.title
+      Image Pilfer
+.row
+  .col-md-9.col-md-offset-3
+    .search
+      = form_tag '/pilfer', remote: true, class: 'pilfer-form' do
+        .row
+          %label
+            = text_field_tag :url_to_pilfer, nil, class: 'form-control', placeholder: 'Enter URL'
+        .row
+          = submit_tag 'Pilfer', class: 'btn btn-default'
+          .spinner.hidden
+            = image_tag 'spinner.gif'
+
+    .download
