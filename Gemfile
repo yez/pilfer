@@ -1,3 +1,5 @@
+ruby '2.0.0'
+
 source 'https://rubygems.org'
 gem 'rails'
 gem 'haml-rails'
@@ -10,7 +12,11 @@ gem 'nokogiri'
 gem 'pg'
 gem 'rubyzip'
 gem 'uuid'
-gem 'debugger'
+gem 'rails_12factor'
+
+group :development do
+  gem 'debugger'
+end
 
 group :test do
   gem 'rspec-rails'
